@@ -1,0 +1,24 @@
+name: storage_sources_sql
+version: 0.0.1
+publish_to: none
+
+repository: https://github.com/nvkantonio/storage_sources_sql
+homepage: https://github.com/nvkantonio/storage_sources_sql
+issue_tracker: https://github.com/nvkantonio/storage_sources_sql/issues
+
+environment:
+  sdk: ^3.3.0
+
+dependencies:
+  meta: ^1.15.0
+  sqflite_common: ^2.5.4
+  storage_sources_core:
+    git:
+      url: https://github.com/nvkantonio/storage_sources_core
+
+dev_dependencies:
+  sqlite3: ^3.0.0
+  sqflite_common_ffi: ^2.4.0
+  lints: ^6.0.0
+  test: ^1.25.6
+  path: ^1.9.1
