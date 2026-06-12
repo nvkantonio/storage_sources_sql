@@ -34,6 +34,10 @@ void main() {
 
     setUp(() async {
       await dbState.openDatabase();
+
+      if (await testingFile.exists()) {
+        await testingFile.delete();
+      }
     });
 
     tearDown(() async {
@@ -42,6 +46,8 @@ void main() {
       if (await testingFile.exists()) {
         await testingFile.delete();
       }
+
+      dbSource.dbTableStatePublic.clearIsTableExistState();
     });
 
     test(

@@ -80,6 +80,8 @@ abstract class DatabaseState {
     final db = await openDatabaseImplementation;
     try {
       return await callback(db);
+    } catch (e) {
+      rethrow;
     } finally {
       await db.close();
     }

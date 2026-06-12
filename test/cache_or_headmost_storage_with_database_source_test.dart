@@ -52,32 +52,27 @@ void main() {
     });
 
     test('Test db value empty initially', () async {
-      final responseStack = await storage.dataStream().toList();
-      expect(responseStack,
+      expect(await storage.dataStream().toList(),
           [UndefResponse<String?>(), OkResponse<String?>(testValue1)]);
     });
 
     test('Test db value insert value', () async {
-      final responseStack1 = await storage.dataStream().toList();
-      expect(responseStack1,
+      expect(await storage.dataStream().toList(),
           [UndefResponse<String?>(), OkResponse<String?>(testValue1)]);
 
       // Test db value created in storage process
-      final responseStack2 = await storage.dataStream().toList();
-      expect(responseStack2, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue1),
         OkResponse<String?>(testValue1),
       ]);
     });
 
     test('Test db value replace value', () async {
-      final responseStack1 = await storage.dataStream().toList();
-      expect(responseStack1,
+      expect(await storage.dataStream().toList(),
           [UndefResponse<String?>(), OkResponse<String?>(testValue1)]);
 
       // Test db value created in storage process
-      final responseStack2 = await storage.dataStream().toList();
-      expect(responseStack2, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue1),
         OkResponse<String?>(testValue1),
       ]);
@@ -85,14 +80,12 @@ void main() {
       // Test db value update
       callbackValue = testValue2;
 
-      final responseStack3 = await storage.dataStream().toList();
-      expect(responseStack3, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue1),
         OkResponse<String?>(testValue2),
       ]);
 
-      final responseStack4 = await storage.dataStream().toList();
-      expect(responseStack4, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue2),
         OkResponse<String?>(testValue2),
       ]);
@@ -140,26 +133,22 @@ void main() {
     });
 
     test('Test db value insert value with delayed callback', () async {
-      final responseStack1 = await storage.dataStream().toList();
-      expect(responseStack1,
+      expect(await storage.dataStream().toList(),
           [UndefResponse<String?>(), OkResponse<String?>(testValue1)]);
 
       // Test db value created in storage process
-      final responseStack2 = await storage.dataStream().toList();
-      expect(responseStack2, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue1),
         OkResponse<String?>(testValue1),
       ]);
     });
 
     test('Test db value replace value with delayed callback', () async {
-      final responseStack1 = await storage.dataStream().toList();
-      expect(responseStack1,
+      expect(await storage.dataStream().toList(),
           [UndefResponse<String?>(), OkResponse<String?>(testValue1)]);
 
       // Test db value created in storage process
-      final responseStack2 = await storage.dataStream().toList();
-      expect(responseStack2, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue1),
         OkResponse<String?>(testValue1),
       ]);
@@ -167,14 +156,12 @@ void main() {
       // Test db value update
       callbackValue = testValue2;
 
-      final responseStack3 = await storage.dataStream().toList();
-      expect(responseStack3, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue1),
         OkResponse<String?>(testValue2),
       ]);
 
-      final responseStack4 = await storage.dataStream().toList();
-      expect(responseStack4, [
+      expect(await storage.dataStream().toList(), [
         OkResponse<String?>(testValue2),
         OkResponse<String?>(testValue2),
       ]);
@@ -186,7 +173,7 @@ void main() {
 
     String converterTestNull(String? value) {
       if (value == null) {
-        throw 'Test exception';
+        throw 'Conversion exception';
       } else {
         return value;
       }
@@ -194,7 +181,7 @@ void main() {
 
     String? okCallbackFn() => 'testValue';
     String? causeConversionErrorFn() => null;
-    Never errorCallbackFn() => throw 'Test exception';
+    Never errorCallbackFn() => throw 'Forced exception';
 
     String? Function() callbackFn = errorCallbackFn;
 
@@ -241,8 +228,7 @@ void main() {
     test(
       'Test dbSource value must not update on invalid callbackSource',
       () async {
-        final responseStack = await storage.dataStream().toList();
-        expect(responseStack, [
+        expect(await storage.dataStream().toList(), [
           isA<UndefResponse<String?>>(),
           isA<ErrorResponse<String?>>(),
         ]);
@@ -257,8 +243,7 @@ void main() {
       () async {
         await updateDbValueToInvalid();
 
-        final responseStack = await storage.dataStream().toList();
-        expect(responseStack, [
+        expect(await storage.dataStream().toList(), [
           isA<ErrorResponse<String?>>(),
           isA<ErrorResponse<String?>>(),
         ]);
@@ -275,8 +260,7 @@ void main() {
 
         await updateDbValueToInvalid();
 
-        final responseStack = await storage.dataStream().toList();
-        expect(responseStack,
+        expect(await storage.dataStream().toList(),
             [isA<ErrorResponse<String?>>(), isA<OkResponse<String?>>()]);
 
         /// Expect dbSource invalid value was replaced with valid data
@@ -289,8 +273,7 @@ void main() {
       () async {
         await dbSource.update(okCallbackFn());
 
-        final responseStack = await storage.dataStream().toList();
-        expect(responseStack,
+        expect(await storage.dataStream().toList(),
             [isA<OkResponse<String?>>(), isA<ErrorResponse<String?>>()]);
 
         /// Expect dbSource invalid value was not changed
@@ -305,8 +288,7 @@ void main() {
 
         await dbSource.update(okCallbackFn());
 
-        final responseStack = await storage.dataStream().toList();
-        expect(responseStack, [
+        expect(await storage.dataStream().toList(), [
           OkResponse<String?>(okCallbackFn()),
           OkResponse<String?>(causeConversionErrorFn()),
           isA<OtherErrorStorageSourceResult<String?>>()

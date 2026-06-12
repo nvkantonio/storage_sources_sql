@@ -33,63 +33,61 @@ void main() {
   group('A group of databaseSource tests', () {
     final dbState = DatabaseStateInMemory();
 
+    final source1 = TextValueSqliteStorageSource(
+      dbState: dbState,
+      key: 'test-key',
+    );
+
+    final source2 = TextValueSqliteStorageSource(
+      dbState: dbState,
+      key: 'test-key',
+    );
+
     setUp(() async {
       await dbState.openDatabase();
     });
 
     tearDown(() async {
       await dbState.forceCloseDatabase();
+
+      source1.dbTableStatePublic.clearIsTableExistState();
+      source2.dbTableStatePublic.clearIsTableExistState();
     });
 
     test('Test single SqliteStorageSource concurrent operations same key',
         () async {
       const testValue = 'yes-yes-yes';
 
-      final source = TextValueSqliteStorageSource(
-        dbState: dbState,
-        key: 'test-key',
-      );
-
-      final fetchResult1 = runTestFutureException(source.fetchData);
-      final fetchResult2 = runTestFutureException(source.fetchData);
+      final fetchResult1 = runTestFutureException(source1.fetchData);
+      final fetchResult2 = runTestFutureException(source1.fetchData);
 
       expect(await fetchResult1, isNotTextException);
       expect(await fetchResult2, isNotTextException);
       expect(
-          await runTestFutureException(source.fetchData), isNotTextException);
+          await runTestFutureException(source1.fetchData), isNotTextException);
 
       final updateResult1 =
-          runTestFutureException(() => source.update(testValue));
+          runTestFutureException(() => source1.update(testValue));
       final updateResult2 =
-          runTestFutureException(() => source.update(testValue));
+          runTestFutureException(() => source1.update(testValue));
 
       expect(await updateResult1, isNotTextException);
       expect(await updateResult2, isNotTextException);
-      expect(await runTestFutureException(() => source.update(testValue)),
+      expect(await runTestFutureException(() => source1.update(testValue)),
           isNotTextException);
 
-      final deleteResult1 = runTestFutureException(() => source.delete());
-      final deleteResult2 = runTestFutureException(() => source.delete());
+      final deleteResult1 = runTestFutureException(() => source1.delete());
+      final deleteResult2 = runTestFutureException(() => source1.delete());
 
       expect(await deleteResult1, isNotTextException);
       expect(await deleteResult2, isNotTextException);
-      expect(await runTestFutureException(() => source.delete()),
+      expect(await runTestFutureException(() => source1.delete()),
           isNotTextException);
     });
 
     test('Test multiple SqliteStorageSource concurrent operations same key',
         () async {
       const testValue = 'yes-yes-yes';
-
-      final source1 = TextValueSqliteStorageSource(
-        dbState: dbState,
-        key: 'test-key',
-      );
-
-      final source2 = TextValueSqliteStorageSource(
-        dbState: dbState,
-        key: 'test-key',
-      );
 
       final fetchResult1 = runTestFutureException(source1.fetchData);
       final fetchResult2 = runTestFutureException(source2.fetchData);
@@ -122,17 +120,6 @@ void main() {
         'Test multiple SqliteStorageSource concurrent operations different key',
         () async {
       const testValue = 'yes-yes-yes';
-
-      final source1 = TextValueSqliteStorageSource(
-        dbState: dbState,
-        key: 'test-key1',
-      );
-
-      final source2 = TextValueSqliteStorageSource(
-        dbState: dbState,
-        key: 'test-key2',
-      );
-
       final fetchResult1 = runTestFutureException(source1.fetchData);
       final fetchResult2 = runTestFutureException(source2.fetchData);
 
