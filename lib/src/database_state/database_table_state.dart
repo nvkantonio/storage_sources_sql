@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:sqflite_common/sqflite.dart';
+import 'package:storage_sources_core/callback_completer.dart';
 
 import '../utils/queries.dart';
 import '../utils/sql_master_queries.dart';
@@ -8,11 +9,25 @@ import '../utils/sql_master_queries.dart';
 import '../../storage_sources_sql_core.dart';
 import '../../misc.dart';
 
+final globalProcessLocker = CallbackCompletersProcesses();
+
 abstract interface class DatabaseTableStatePublic {
+  CallbackCompletersProcesses get tableLocker;
+
   FutureOr<bool> get isTableExist;
   String get tableName;
 
   FutureOr<bool> checkIsTableExist();
+
+  Future<R> runInTableLock<R>(
+    Future<R> Function() callback, {
+    String? equalityArg,
+  });
+
+  Future<R> runInTableLockAndIsolate<R>({
+    required FutureOr<R> Function(Database db) callback,
+    dynamic equalityArg = const NoArgument(),
+  });
 
   void clearIsTableExistState();
 }
@@ -36,6 +51,33 @@ class DatabaseTableState implements DatabaseTableStatePublic {
 
   @override
   FutureOr<bool> get isTableExist => checkIsTableExist();
+
+  @override
+  CallbackCompletersProcesses get tableLocker => globalProcessLocker;
+
+  @override
+  Future<R> runInTableLock<R>(
+    Future<R> Function() callback, {
+    dynamic equalityArg = const NoArgument(),
+  }) async {
+    return tableLocker.run<R>(
+      callback,
+      processLink: tableName,
+      equalityArg: equalityArg,
+    );
+  }
+
+  @override
+  Future<R> runInTableLockAndIsolate<R>({
+    required FutureOr<R> Function(Database db) callback,
+    dynamic equalityArg = const NoArgument(),
+  }) {
+    return tableLocker.run<R>(
+      () => dbState.runInIsolate<R>(callback),
+      processLink: tableName,
+      equalityArg: equalityArg,
+    );
+  }
 
   Future<void> createTable([Database? db]) async {
     await dbState.runInIsolateOrDirectly(_createTableNoIsolate, db);
