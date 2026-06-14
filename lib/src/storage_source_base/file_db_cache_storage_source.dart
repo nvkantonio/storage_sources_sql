@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:meta/meta.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 import 'package:storage_sources_core/storage_sources_core.dart';
-import 'package:storage_sources_core/callback_completer.dart';
 
 import '../../misc.dart';
 import '../../storage_sources_sql.dart';
@@ -20,14 +20,7 @@ abstract class FileFromDatabasePathStorageSource<T>
   @override
   final PathValueSqliteStorageSource parent;
 
-  @protected
-  final fetchCompletionController = CallbackCompleter<SR<T>>();
-
-  @protected
-  final updateCompletionController = CallbackCompleter<int>();
-
-  @protected
-  final deleteCompletionController = CallbackCompleter<int>();
+  Future<int> writeFileAndUpdate(T file, List<int> bytes);
 
   @protected
   Future<SR<T>> fileResultFromPath(String path);
@@ -41,22 +34,9 @@ abstract class FileFromDatabasePathStorageSource<T>
   @protected
   FutureOr<void> deleteFile(T file);
 
-  @override
-  Future<SR<T>> fetchData() => fetchCompletionController.run(_fetchData);
-
-  Future<int> writeFileAndUpdate(T file, List<int> bytes);
-
-  @override
-  Future<int> update(T newData) =>
-      updateCompletionController.run(() => _update(newData));
-
-  @override
-  Future<int> delete([bool doDeleteFile = true]) =>
-      deleteCompletionController.run(_delete);
-
-  Future<SR<T>> _fetchData() async {
+  Future<SR<T>> fetchDataDirect(Database db) async {
     try {
-      switch (await parent.fetchData()) {
+      switch (await parent.fetchDataDirect(db)) {
         case NotOkStorageSourceResult<String> result:
           return result.convert<T>();
         case OkStorageSourceResult<String>(:final value):
@@ -67,26 +47,27 @@ abstract class FileFromDatabasePathStorageSource<T>
     }
   }
 
-  Future<int> _update(T newData) async {
+  Future<int> updateDirect(T newData, Database db) async {
     final path = await getFilePath(newData);
+
     if (await doFileExist(newData)) {
-      return await parent.update(path);
+      return await parent.updateDirect(path, db);
     } else {
       throw FileWasNotFoundException(
           'File was not found in path: $path', newData, StackTrace.current);
     }
   }
 
-  Future<int> _delete([bool doDeleteFile = true]) async {
+  Future<int> deleteDirect(Database db, [bool doDeleteFile = true]) async {
     if (!doDeleteFile) {
-      return await parent.delete();
+      return await parent.deleteDirect(db);
     }
 
     final String path;
 
-    switch (await parent.fetchData()) {
+    switch (await parent.fetchDataDirect(db)) {
       case UndefinedStorageSourceResult<String>():
-        return await parent.delete();
+        return 0;
       case ErrorStorageSourceResult<String> result:
         throw result.error;
       case OkStorageSourceResult<String>(:final value):
@@ -100,6 +81,30 @@ abstract class FileFromDatabasePathStorageSource<T>
         await deleteFile(value);
     }
 
-    return await parent.delete();
+    return await parent.deleteDirect(db);
+  }
+
+  @override
+  Future<SR<T>> fetchData() {
+    return dbTableState.runInTableLockAndIsolate(
+      callback: fetchDataDirect,
+      equalityArg: '$runtimeType:fetch',
+    );
+  }
+
+  @override
+  Future<int> update(T newData) {
+    return dbTableState.runInTableLockAndIsolate(
+      callback: (db) => updateDirect(newData, db),
+      equalityArg: '$runtimeType:update:${newData.hashCode}',
+    );
+  }
+
+  @override
+  Future<int> delete() {
+    return dbTableState.runInTableLockAndIsolate(
+      callback: deleteDirect,
+      equalityArg: '$runtimeType:delete',
+    );
   }
 }

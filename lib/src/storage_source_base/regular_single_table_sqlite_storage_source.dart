@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:sqflite_common/sqflite.dart';
 import 'package:storage_sources_core/storage_sources_core.dart';
-import 'package:storage_sources_core/callback_completer.dart';
 
 import '../../misc.dart';
 import '../../storage_sources_sql_core.dart';
@@ -31,111 +30,53 @@ abstract class RegularSingleTableSqliteStorageSource<T>
   @protected
   late final DatabaseTableState dbTableState;
 
-  @protected
-  final fetchCompletionController = CallbackCompleter<SR<T>>();
-
-  @protected
-  final updateCompletionController = CallbackCompleter<int>();
-
-  @protected
-  final deleteCompletionController = CallbackCompleter<int>();
+  String get tableName;
 
   String get createTableQuery;
-
-  @override
-  String get tableName;
 
   T dataFromDatabaseRow(Map<String, Object?> result);
 
   Map<String, Object?> databaseRowFromData(T data);
 
-  @override
-  Future<SR<T>> fetchData() => fetchCompletionController.run(_fetchData);
+  Future<SR<T>> fetchDataDirect(Database db) async {
+    bool doDeleteKey = false;
 
-  @override
-  Future<int> update(T newData, [Database? db]) {
-    return updateCompletionController.run(() {
-      return dbState.runInIsolateOrDirectly((db) {
-        return updateNoIsolate(db, newData);
-      }, db);
-    });
-  }
-
-  @override
-  Future<int> delete([Database? db]) {
-    return deleteCompletionController.run(() {
-      return dbState.runInIsolateOrDirectly(deleteNoIsolate, db);
-    });
-  }
-
-  @visibleForTesting
-  Future<int> updateDirect(Map<String, Object?> dbEntry, Database db) async {
-    await createTableIfNotExist(db);
-
-    final rowId = await db.insert(
-      tableName,
-      dbEntry,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    return rowId;
-  }
-
-  @protected
-  @visibleForTesting
-  Future<void> createTableIfNotExist(Database db) async {
-    final isTableExist = await dbTableState.checkIsTableExist(db);
-
-    if (!isTableExist) {
-      await dbTableState.createTable(db);
-    }
-  }
-
-  Future<SR<T>> _fetchData() async {
     try {
-      final db = await dbState.database;
+      final isTableExist = await dbTableState.checkIsTableExist(db);
 
-      bool doDeleteKey = false;
-
-      try {
-        final isTableExist = await dbTableState.checkIsTableExist(db);
-
-        if (!isTableExist) {
-          return UndefinedStorageSourceResult<T>();
-        }
-
-        final result = await db.query(
-          tableName,
-          where: Queries.whereKey,
-          whereArgs: [key],
-        );
-
-        if (result.isEmpty) {
-          return UndefinedStorageSourceResult<T>();
-        }
-
-        if (result.length > 1) {
-          doDeleteKey = true;
-          throw KeyMustBeUnique(
-              'Key must be unique. Database holds ${result.length} rows for a key',
-              result,
-              StackTrace.current);
-        }
-
-        return OkStorageSourceResult<T>(dataFromDatabaseRow(result.first));
-      } catch (e, st) {
-        if (doDeleteKey) {
-          await deleteNoIsolate(db);
-        }
-
-        return ErrorStorageSourceResult<T>(e, stackTrace: st);
+      if (!isTableExist) {
+        return UndefinedStorageSourceResult<T>();
       }
-    } finally {
-      await dbState.closeDatabase();
+
+      final result = await db.query(
+        tableName,
+        where: Queries.whereKey,
+        whereArgs: [key],
+      );
+
+      if (result.isEmpty) {
+        return UndefinedStorageSourceResult<T>();
+      }
+
+      if (result.length > 1) {
+        doDeleteKey = true;
+        throw KeyMustBeUnique(
+            'Key must be unique. Database holds ${result.length} rows for a key',
+            result,
+            StackTrace.current);
+      }
+
+      return OkStorageSourceResult<T>(dataFromDatabaseRow(result.first));
+    } catch (e, st) {
+      if (doDeleteKey) {
+        await deleteDirect(db);
+      }
+
+      return ErrorStorageSourceResult<T>(e, stackTrace: st);
     }
   }
 
-  @protected
-  Future<int> updateNoIsolate(Database db, T newData) async {
+  Future<int> updateDirect(T newData, Database db) async {
     await createTableIfNotExist(db);
 
     final dbEntry = databaseRowFromData(newData);
@@ -148,8 +89,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
     return rowId;
   }
 
-  @protected
-  Future<int> deleteNoIsolate(Database db) async {
+  Future<int> deleteDirect(Database db) async {
     final isTableExist = await dbTableState.checkIsTableExist(db);
 
     if (!isTableExist) {
@@ -163,5 +103,53 @@ abstract class RegularSingleTableSqliteStorageSource<T>
     );
 
     return rowsAffectedCount;
+  }
+
+  Future<int> updateDirectManually(
+    Map<String, Object?> dbEntry, {
+    required Database db,
+  }) async {
+    await createTableIfNotExist(db);
+
+    final rowId = await db.insert(
+      tableName,
+      dbEntry,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    return rowId;
+  }
+
+  @override
+  Future<SR<T>> fetchData() {
+    return dbTableState.runInTableLockAndIsolate(
+      callback: fetchDataDirect,
+      equalityArg: '$runtimeType:fetch',
+    );
+  }
+
+  @override
+  Future<int> update(T newData) {
+    return dbTableState.runInTableLockAndIsolate(
+      callback: (db) => updateDirect(newData, db),
+      equalityArg: '$runtimeType:update:${newData.hashCode}',
+    );
+  }
+
+  @override
+  Future<int> delete() {
+    return dbTableState.runInTableLockAndIsolate(
+      callback: deleteDirect,
+      equalityArg: '$runtimeType:delete',
+    );
+  }
+
+  @protected
+  @visibleForTesting
+  Future<void> createTableIfNotExist(Database db) async {
+    final isTableExist = await dbTableState.checkIsTableExist(db);
+
+    if (!isTableExist) {
+      await dbTableState.createTable(db);
+    }
   }
 }

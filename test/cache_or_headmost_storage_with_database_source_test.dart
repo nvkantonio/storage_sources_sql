@@ -216,13 +216,16 @@ void main() {
 
     /// Update dbSource value which will throw
     Future<void> updateDbValueToInvalid() async {
-      await dbState.runInIsolate((db) async {
-        await dbSource.updateDirect({
-          TextValueConvertibleSqliteStorageSource.keyColumnName: 'test-key',
-          TextValueConvertibleSqliteStorageSource.dataColumnName:
-              causeConversionErrorFn(),
-        }, db);
-      });
+      return dbState.runInIsolate(
+        (db) => dbSource.updateDirectManually(
+          {
+            TextValueConvertibleSqliteStorageSource.keyColumnName: 'test-key',
+            TextValueConvertibleSqliteStorageSource.dataColumnName:
+                causeConversionErrorFn(),
+          },
+          db: db,
+        ),
+      );
     }
 
     test(

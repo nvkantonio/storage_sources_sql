@@ -55,15 +55,15 @@ void main() {
         () async {
       expect(await testingFile.exists(), false);
 
-      expect(await fileSource.isTableExist, false);
+      expect(await fileSource.dbTableStatePublic.isTableExist, false);
 
       expect(await dbSource.fetchData(), UndefResponse<String>());
       expect(await fileSource.fetchData(), UndefResponse<io.File>());
 
       await fileSource.writeFileAndUpdate(testingFile);
 
-      expect(await dbSource.isTableExist, true);
-      expect(await fileSource.isTableExist, true);
+      expect(await dbSource.dbTableStatePublic.isTableExist, true);
+      expect(await fileSource.dbTableStatePublic.isTableExist, true);
 
       expect(await dbSource.fetchData(), OkResponse<String>(testingPath));
       expect(await fileSource.fetchData(), isA<OkResponse<io.File>>());
