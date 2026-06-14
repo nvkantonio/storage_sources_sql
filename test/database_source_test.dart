@@ -42,7 +42,7 @@ void main() {
         key: 'test-key',
       );
 
-      expect(await source.isTableExist, false);
+      expect(await source.dbTableStatePublic.isTableExist, false);
 
       expect(await source.fetchData(), UndefResponse<String?>());
 
@@ -54,7 +54,7 @@ void main() {
 
       expect(tableNames, contains(source.tableName));
 
-      expect(await source.isTableExist, true);
+      expect(await source.dbTableStatePublic.isTableExist, true);
 
       final fetchedData = await source.fetchData();
 
@@ -75,13 +75,13 @@ void main() {
         toStringConverter: (value) => value.toString(),
       );
 
-      expect(await source.isTableExist, false);
+      expect(await source.dbTableStatePublic.isTableExist, false);
 
       expect(await source.fetchData(), UndefResponse<int>());
 
       await source.update(testValue);
 
-      expect(await source.isTableExist, true);
+      expect(await source.dbTableStatePublic.isTableExist, true);
 
       final fetchedData = await source.fetchData();
 

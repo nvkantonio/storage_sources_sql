@@ -9,15 +9,15 @@ abstract class SingleTableSqliteStorageSource<T> extends SqliteStorageSource<T>
     implements KeyedDataStorageSource<T> {
   SingleTableSqliteStorageSource();
 
-  FutureOr<bool> get isTableExist => dbTableState.isTableExist;
-
-  String get tableName => dbTableState.tableName;
-
   DatabaseTableStatePublic get dbTableStatePublic =>
       dbTableState as DatabaseTableStatePublic;
 
   @protected
   DatabaseTableState get dbTableState;
+
+  @override
+  @protected
+  DatabaseState get dbState => dbTableState.dbState;
 
   /// Return id of inserted of updated value;
   @override
@@ -41,10 +41,4 @@ abstract class SingleTableSqliteStorageSourceProxy<T, ProxyType,
   @override
   @protected
   DatabaseTableState get dbTableState => parent.dbTableState;
-
-  @override
-  FutureOr<bool> get isTableExist => parent.isTableExist;
-
-  @override
-  String get tableName => parent.tableName;
 }
