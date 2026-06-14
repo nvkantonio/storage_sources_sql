@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:sqflite_common/sqflite.dart';
+import 'package:storage_sources_sql/storage_sources_sql.dart';
 
 import '../../misc.dart';
 
@@ -16,6 +17,16 @@ abstract class DatabaseState {
       DatabaseStateOpenWithCallback(openDatabaseImplementationCallback);
 
   Database? _databaseState;
+
+  DatabaseTableState createDatabaseTable({
+    required String createTableQuery,
+    required String tableName,
+  }) =>
+      DatabaseTableState(
+        dbState: this,
+        tableName: tableName,
+        createTableQuery: createTableQuery,
+      );
 
   /// This getter does not close db connection automatically
   FutureOr<Database> get database {

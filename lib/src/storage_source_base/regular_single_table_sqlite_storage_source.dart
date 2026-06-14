@@ -14,10 +14,9 @@ abstract class RegularSingleTableSqliteStorageSource<T>
     required this.key,
     required this.dbState,
   }) {
-    dbTableState = DatabaseTableState(
-      tableName: tableName,
+    dbTableState = dbState.createDatabaseTable(
       createTableQuery: createTableQuery,
-      dbState: dbState,
+      tableName: tableName,
     );
   }
 
