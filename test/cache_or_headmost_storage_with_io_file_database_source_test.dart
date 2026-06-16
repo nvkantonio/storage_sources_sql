@@ -102,12 +102,6 @@ void main() {
 
       expect(await storage.dataStream().toList(), [
         isA<OkResponse<io.File>>(),
-
-        /// TODO: make custom equality check callback or create
-        /// new CacheOrHeadmost for [io.File] operations
-        ///
-        /// Equality is not implemented for [io.File], so it would try to
-        /// rewrite the file
         isA<OkResponse<io.File>>(),
       ]);
 

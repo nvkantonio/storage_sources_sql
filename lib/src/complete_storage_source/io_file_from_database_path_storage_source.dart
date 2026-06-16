@@ -57,4 +57,12 @@ class IoFileFromDatabasePathStorageSource
 
     return OkStorageSourceResult(file);
   }
+
+  @override
+  Future<int> update(io.File newData) {
+    return dbTableState.runInTableLockAndIsolate(
+      callback: (db) => updateDirect(newData, db),
+      equalityArg: '$key:update:${newData.path.hashCode}',
+    );
+  }
 }
