@@ -32,19 +32,10 @@ abstract interface class DatabaseTableStatePublic {
   void clearIsTableExistState();
 }
 
-class DatabaseTableState implements DatabaseTableStatePublic {
-  DatabaseTableState({
-    required this.createTableQuery,
-    required this.dbState,
-    required this.tableName,
-  });
+abstract base class DatabaseTableStateBase implements DatabaseTableStatePublic {
+  String get createTableQuery;
 
-  final String createTableQuery;
-
-  final DatabaseState dbState;
-
-  @override
-  final String tableName;
+  DatabaseState get dbState;
 
   @protected
   bool? isTableExistState;
@@ -126,4 +117,21 @@ class DatabaseTableState implements DatabaseTableStatePublic {
   Future<void> _deleteTableRowsNoIsolate(Database db) async {
     await db.delete(tableName);
   }
+}
+
+final class DatabaseTableState extends DatabaseTableStateBase {
+  DatabaseTableState({
+    required this.createTableQuery,
+    required this.dbState,
+    required this.tableName,
+  });
+
+  @override
+  final String createTableQuery;
+
+  @override
+  final DatabaseState dbState;
+
+  @override
+  final String tableName;
 }

@@ -13,9 +13,13 @@ abstract class _FileFromDatabasePathStorageSource<T>
 
 abstract class FileFromDatabasePathStorageSource<T>
     extends _FileFromDatabasePathStorageSource<T> {
-  FileFromDatabasePathStorageSource(
-      {required String key, required DatabaseState dbState})
-      : parent = PathValueSqliteStorageSource(key: key, dbState: dbState);
+  FileFromDatabasePathStorageSource({
+    required String key,
+    required PathValueDatabaseTableState dbTableState,
+  }) : parent = PathValueSqliteStorageSource(
+          key: key,
+          dbTableState: dbTableState,
+        );
 
   @override
   final PathValueSqliteStorageSource parent;
@@ -88,7 +92,7 @@ abstract class FileFromDatabasePathStorageSource<T>
   Future<SR<T>> fetchData() {
     return dbTableState.runInTableLockAndIsolate(
       callback: fetchDataDirect,
-      equalityArg: '$runtimeType:fetch',
+      equalityArg: '$key:fetch',
     );
   }
 
@@ -96,7 +100,7 @@ abstract class FileFromDatabasePathStorageSource<T>
   Future<int> update(T newData) {
     return dbTableState.runInTableLockAndIsolate(
       callback: (db) => updateDirect(newData, db),
-      equalityArg: '$runtimeType:update:${newData.hashCode}',
+      equalityArg: '$key:update:${newData.hashCode}',
     );
   }
 
@@ -104,7 +108,7 @@ abstract class FileFromDatabasePathStorageSource<T>
   Future<int> delete() {
     return dbTableState.runInTableLockAndIsolate(
       callback: deleteDirect,
-      equalityArg: '$runtimeType:delete',
+      equalityArg: '$key:delete',
     );
   }
 }

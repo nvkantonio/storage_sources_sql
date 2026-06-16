@@ -25,14 +25,15 @@ void main() {
     final testingFile = io.File(testingPath);
 
     final dbState = DatabaseStateInMemory();
+    final dbTableState = PathValueDatabaseTableState(dbState);
 
     final dbSource = PathValueSqliteStorageSource(
-      dbState: dbState,
       key: 'test-key',
+      dbTableState: dbTableState,
     );
     final fileSource = IoFileFromDatabasePathStorageSource(
-      dbState: dbState,
       key: 'test-key',
+      dbTableState: dbTableState,
     );
 
     final storage = CacheOrHeadmostStorage<io.File>(
@@ -56,7 +57,7 @@ void main() {
     });
 
     tearDown(() async {
-      dbSource.dbTableStatePublic.clearIsTableExistState();
+      dbTableState.clearIsTableExistState();
 
       if (await testingFile.exists()) {
         await testingFile.delete();

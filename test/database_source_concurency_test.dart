@@ -32,15 +32,16 @@ void main() {
 
   group('A group of databaseSource tests', () {
     final dbState = DatabaseStateInMemory();
+    final dbTableState = TextValueDatabaseTableState(dbState);
 
     final source1 = TextValueSqliteStorageSource(
-      dbState: dbState,
       key: 'test-key',
+      dbTableState: dbTableState,
     );
 
     final source2 = TextValueSqliteStorageSource(
-      dbState: dbState,
       key: 'test-key',
+      dbTableState: dbTableState,
     );
 
     setUp(() async {
@@ -48,10 +49,8 @@ void main() {
     });
 
     tearDown(() async {
+      dbTableState.clearIsTableExistState();
       await dbState.forceCloseDatabase();
-
-      source1.dbTableStatePublic.clearIsTableExistState();
-      source2.dbTableStatePublic.clearIsTableExistState();
     });
 
     test('Test single SqliteStorageSource concurrent operations same key',

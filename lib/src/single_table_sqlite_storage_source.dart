@@ -13,7 +13,7 @@ abstract class SingleTableSqliteStorageSource<T> extends SqliteStorageSource<T>
       dbTableState as DatabaseTableStatePublic;
 
   @protected
-  DatabaseTableState get dbTableState;
+  DatabaseTableStateBase get dbTableState;
 
   @override
   @protected
@@ -40,5 +40,5 @@ abstract class SingleTableSqliteStorageSourceProxy<T, ProxyType,
 
   @override
   @protected
-  DatabaseTableState get dbTableState => parent.dbTableState;
+  DatabaseTableStateBase get dbTableState => parent.dbTableState;
 }

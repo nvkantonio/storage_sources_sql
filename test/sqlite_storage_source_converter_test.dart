@@ -18,6 +18,7 @@ void main() {
 
   group('A group of ParsedTextValueSqliteStorageSource tests', () {
     final dbState = DatabaseStateInMemory();
+    final dbTableState = TextValueDatabaseTableState(dbState);
 
     setUp(() async {
       await dbState.openDatabase();
@@ -28,34 +29,35 @@ void main() {
     });
 
     test(
-        'Test ParsedTextValueSqliteStorageSource fetch, update and delete and in sync',
-        () async {
-      const testValue = 123;
+      'Test ParsedTextValueSqliteStorageSource fetch, update and delete and in sync',
+      () async {
+        const testValue = 123;
 
-      final originalSource = TextValueSqliteStorageSource(
-        dbState: dbState,
-        key: 'test-key',
-      );
+        final originalSource = TextValueSqliteStorageSource(
+          key: 'test-key',
+          dbTableState: dbTableState,
+        );
 
-      final source = ParsedTextValueSqliteStorageSource(
-        parent: originalSource,
-        fromStringConverter: (value) => int.parse(value!),
-        toStringConverter: (value) => value.toString(),
-      );
+        final source = ParsedTextValueSqliteStorageSource(
+          parent: originalSource,
+          fromStringConverter: (value) => int.parse(value!),
+          toStringConverter: (value) => value.toString(),
+        );
 
-      expect(await source.fetchData(), UndefResponse<int>());
-      expect(await originalSource.fetchData(), UndefResponse<String?>());
+        expect(await source.fetchData(), UndefResponse<int>());
+        expect(await originalSource.fetchData(), UndefResponse<String?>());
 
-      await source.update(testValue);
+        await source.update(testValue);
 
-      expect(await source.fetchData(), OkResponse<int>(testValue));
-      expect(await originalSource.fetchData(),
-          OkResponse<String?>(testValue.toString()));
+        expect(await source.fetchData(), OkResponse<int>(testValue));
+        expect(await originalSource.fetchData(),
+            OkResponse<String?>(testValue.toString()));
 
-      await source.delete();
+        await source.delete();
 
-      expect(await source.fetchData(), UndefResponse<int>());
-      expect(await originalSource.fetchData(), UndefResponse<String?>());
-    });
+        expect(await source.fetchData(), UndefResponse<int>());
+        expect(await originalSource.fetchData(), UndefResponse<String?>());
+      },
+    );
   });
 }

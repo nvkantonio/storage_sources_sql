@@ -24,10 +24,11 @@ void main() {
     String callbackValue = testValue1;
 
     final dbState = DatabaseStateInMemory();
+    final dbTableState = TextValueDatabaseTableState(dbState);
 
     final dbSource = TextValueSqliteStorageSource(
-      dbState: dbState,
       key: 'test-key',
+      dbTableState: dbTableState,
     );
 
     final storage = CacheOrHeadmostStorage<String?>(
@@ -48,7 +49,7 @@ void main() {
 
     tearDown(() async {
       await dbState.forceCloseDatabase();
-      dbSource.dbTableStatePublic.clearIsTableExistState();
+      dbTableState.clearIsTableExistState();
     });
 
     test('Test db value empty initially', () async {
@@ -100,10 +101,11 @@ void main() {
     String callbackValue = testValue1;
 
     final dbState = DatabaseStateInMemory();
+    final dbTableState = TextValueDatabaseTableState(dbState);
 
     final dbSource = TextValueSqliteStorageSource(
-      dbState: dbState,
       key: 'test-key',
+      dbTableState: dbTableState,
     );
 
     final storage = CacheOrHeadmostStorage<String?>(
@@ -170,6 +172,7 @@ void main() {
 
   group('A group of CacheOrHeadmostStorage source exceptions tests', () {
     final dbState = DatabaseStateInMemory();
+    final dbTableState = TextValueDatabaseTableState(dbState);
 
     String converterTestNull(String? value) {
       if (value == null) {
@@ -186,8 +189,8 @@ void main() {
     String? Function() callbackFn = errorCallbackFn;
 
     final dbSource = TextValueConvertibleSqliteStorageSource<String?>(
-      dbState: dbState,
       key: 'test-key',
+      dbTableState: dbTableState,
       fromStringConverter: converterTestNull,
       toStringConverter: converterTestNull,
     );
@@ -219,9 +222,8 @@ void main() {
       return dbState.runInIsolate(
         (db) => dbSource.updateDirectManually(
           {
-            TextValueConvertibleSqliteStorageSource.keyColumnName: 'test-key',
-            TextValueConvertibleSqliteStorageSource.dataColumnName:
-                causeConversionErrorFn(),
+            dbTableState.keyColumnName: 'test-key',
+            dbTableState.dataColumnName: causeConversionErrorFn(),
           },
           db: db,
         ),

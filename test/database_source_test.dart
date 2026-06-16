@@ -20,6 +20,7 @@ void main() {
 
   group('A group of databaseSource tests', () {
     final dbState = DatabaseStateInMemory();
+    final dbTableState = TextValueDatabaseTableState(dbState);
 
     setUp(() async {
       await dbState.openDatabase();
@@ -38,8 +39,8 @@ void main() {
       const testValue = 'yes-yes-yes';
 
       final source = TextValueSqliteStorageSource(
-        dbState: dbState,
         key: 'test-key',
+        dbTableState: dbTableState,
       );
 
       expect(await source.dbTableStatePublic.isTableExist, false);
@@ -52,7 +53,7 @@ void main() {
         return getTableNames(db);
       });
 
-      expect(tableNames, contains(source.tableName));
+      expect(tableNames, contains(source.dbTableStatePublic.tableName));
 
       expect(await source.dbTableStatePublic.isTableExist, true);
 
@@ -69,8 +70,8 @@ void main() {
       const testValue = 123;
 
       final source = TextValueConvertibleSqliteStorageSource<int>(
-        dbState: dbState,
         key: 'test-key',
+        dbTableState: dbTableState,
         fromStringConverter: (value) => int.parse(value!),
         toStringConverter: (value) => value.toString(),
       );

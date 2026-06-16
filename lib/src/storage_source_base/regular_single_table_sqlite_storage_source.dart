@@ -9,30 +9,14 @@ import '../utils/queries.dart';
 
 abstract class RegularSingleTableSqliteStorageSource<T>
     extends SingleTableSqliteStorageSource<T> {
-  RegularSingleTableSqliteStorageSource({
-    required this.key,
-    required this.dbState,
-  }) {
-    dbTableState = dbState.createDatabaseTable(
-      createTableQuery: createTableQuery,
-      tableName: tableName,
-    );
-  }
+  RegularSingleTableSqliteStorageSource();
 
   @override
-  final String key;
+  String get key;
 
   @override
   @protected
-  final DatabaseState dbState;
-
-  @override
-  @protected
-  late final DatabaseTableState dbTableState;
-
-  String get tableName;
-
-  String get createTableQuery;
+  DatabaseTableStateBase get dbTableState;
 
   T dataFromDatabaseRow(Map<String, Object?> result);
 
@@ -49,7 +33,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
       }
 
       final result = await db.query(
-        tableName,
+        dbTableState.tableName,
         where: Queries.whereKey,
         whereArgs: [key],
       );
@@ -82,7 +66,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
     final dbEntry = databaseRowFromData(newData);
 
     final rowId = await db.insert(
-      tableName,
+      dbTableState.tableName,
       dbEntry,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -97,7 +81,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
     }
 
     final rowsAffectedCount = await db.delete(
-      tableName,
+      dbTableState.tableName,
       where: Queries.whereKey,
       whereArgs: [key],
     );
@@ -112,7 +96,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
     await createTableIfNotExist(db);
 
     final rowId = await db.insert(
-      tableName,
+      dbTableState.tableName,
       dbEntry,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -123,7 +107,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
   Future<SR<T>> fetchData() {
     return dbTableState.runInTableLockAndIsolate(
       callback: fetchDataDirect,
-      equalityArg: '$runtimeType:fetch',
+      equalityArg: '$key:fetch',
     );
   }
 
@@ -131,7 +115,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
   Future<int> update(T newData) {
     return dbTableState.runInTableLockAndIsolate(
       callback: (db) => updateDirect(newData, db),
-      equalityArg: '$runtimeType:update:${newData.hashCode}',
+      equalityArg: '$key:update:${newData.hashCode}',
     );
   }
 
@@ -139,7 +123,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
   Future<int> delete() {
     return dbTableState.runInTableLockAndIsolate(
       callback: deleteDirect,
-      equalityArg: '$runtimeType:delete',
+      equalityArg: '$key:delete',
     );
   }
 

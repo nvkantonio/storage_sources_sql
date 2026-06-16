@@ -11,7 +11,7 @@ import '../../storage_sources_sql.dart';
 class IoFileFromDatabasePathStorageSource
     extends FileFromDatabasePathStorageSource<io.File> {
   IoFileFromDatabasePathStorageSource(
-      {required super.key, required super.dbState});
+      {required super.key, required super.dbTableState});
 
   Future<int> writeFileAndUpdateDirect(
     io.File file,
