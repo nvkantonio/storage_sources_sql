@@ -41,7 +41,7 @@ void main() {
       headmostSource: CallbackStorageSource(() => testingFile),
       behavior: CacheOrHeadmostStorageBehavior(
         runTasksImmediately: true,
-        runHeadmostSourceFirst: true,
+        runCacheSourceFirst: true,
         doRunSecondIfFirstOk: true,
         deleteCacheOnError: true,
         updateCacheIfNotEqual: true,
