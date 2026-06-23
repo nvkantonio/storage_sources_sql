@@ -27,7 +27,7 @@ void main() {
     final dbState = DatabaseStateInMemory();
     final dbTableState = PathValueDatabaseTableState(dbState);
 
-    final dbSource = PathValueSqliteStorageSource(
+    final dbSource = KeyValueSqliteStorageSource(
       key: 'test-key',
       dbTableState: dbTableState,
     );

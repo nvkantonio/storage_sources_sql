@@ -13,7 +13,7 @@ class TextValueConvertibleSqliteStorageSource<T>
   final String key;
 
   @override
-  final TextValueDatabaseTableState dbTableState;
+  final KeyValueDatabaseTableState dbTableState;
 
   final T Function(String? value) fromStringConverter;
   final String Function(T value) toStringConverter;

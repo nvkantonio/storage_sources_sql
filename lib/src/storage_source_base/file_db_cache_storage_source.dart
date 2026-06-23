@@ -9,20 +9,20 @@ import '../../storage_sources_sql.dart';
 
 abstract class _FileFromDatabasePathStorageSource<T>
     extends SingleTableSqliteStorageSourceProxy<T, String,
-        PathValueSqliteStorageSource> {}
+        KeyValueSqliteStorageSource> {}
 
 abstract class FileFromDatabasePathStorageSource<T>
     extends _FileFromDatabasePathStorageSource<T> {
   FileFromDatabasePathStorageSource({
     required String key,
-    required PathValueDatabaseTableState dbTableState,
-  }) : parent = PathValueSqliteStorageSource(
+    required KeyValueDatabaseTableState dbTableState,
+  }) : parent = KeyValueSqliteStorageSource(
           key: key,
           dbTableState: dbTableState,
         );
 
   @override
-  final PathValueSqliteStorageSource parent;
+  final KeyValueSqliteStorageSource parent;
 
   Future<int> writeFileAndUpdate(String filePath, List<int> bytes);
 

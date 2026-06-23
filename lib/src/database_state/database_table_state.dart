@@ -32,7 +32,7 @@ abstract interface class DatabaseTableStatePublic {
   void clearIsTableExistState();
 }
 
-abstract base class DatabaseTableStateBase implements DatabaseTableStatePublic {
+abstract class DatabaseTableStateBase implements DatabaseTableStatePublic {
   String get createTableQuery;
 
   DatabaseState get dbState;

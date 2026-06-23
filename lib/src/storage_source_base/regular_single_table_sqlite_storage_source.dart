@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:meta/meta.dart';
 import 'package:sqflite_common/sqflite.dart';
 import 'package:storage_sources_core/storage_sources_core.dart';
+import 'package:storage_sources_sql/storage_sources_sql.dart';
 
 import '../../misc.dart';
-import '../../storage_sources_sql_core.dart';
 import '../utils/queries.dart';
 
 abstract class RegularSingleTableSqliteStorageSource<T>
@@ -16,7 +16,7 @@ abstract class RegularSingleTableSqliteStorageSource<T>
 
   @override
   @protected
-  DatabaseTableStateBase get dbTableState;
+  KeyValueDatabaseTableState get dbTableState;
 
   T dataFromDatabaseRow(Map<String, Object?> result);
 
