@@ -1,15 +1,14 @@
 import 'dart:async';
 
-import 'package:meta/meta.dart';
 import 'package:sqflite_common/sqlite_api.dart';
-import 'package:storage_sources_core/storage_sources_core.dart';
+import 'package:storage_sources_core/storage_sources.dart';
 
 import '../../misc.dart';
 import '../../storage_sources_sql.dart';
 
 abstract class _FileFromDatabasePathStorageSource<T>
     extends SingleTableSqliteStorageSourceProxy<T, String,
-        KeyValueSqliteStorageSource> {}
+        KeyValueSqliteStorageSource> implements FileStorageSource<T> {}
 
 abstract class FileFromDatabasePathStorageSource<T>
     extends _FileFromDatabasePathStorageSource<T> {
@@ -23,20 +22,6 @@ abstract class FileFromDatabasePathStorageSource<T>
 
   @override
   final KeyValueSqliteStorageSource parent;
-
-  Future<int> writeFileAndUpdate(String filePath, List<int> bytes);
-
-  @protected
-  Future<SR<T>> fileResultFromPath(String path);
-
-  @protected
-  FutureOr<bool> doFileExist(T file);
-
-  @protected
-  FutureOr<String> getFilePath(T file);
-
-  @protected
-  FutureOr<void> deleteFile(T file);
 
   Future<SR<T>> fetchDataDirect(Database db) async {
     try {
