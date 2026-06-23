@@ -61,7 +61,7 @@ void main() {
       expect(await dbSource.fetchData(), UndefResponse<String>());
       expect(await fileSource.fetchData(), UndefResponse<io.File>());
 
-      await fileSource.writeFileAndUpdate(testingFile);
+      await fileSource.writeFileAndUpdate(testingFile.path);
 
       expect(await dbSource.dbTableStatePublic.isTableExist, true);
       expect(await fileSource.dbTableStatePublic.isTableExist, true);
@@ -83,7 +83,7 @@ void main() {
         () async {
       expect(await testingFile.exists(), false);
 
-      await fileSource.writeFileAndUpdate(testingFile);
+      await fileSource.writeFileAndUpdate(testingFile.path);
 
       expect(await dbSource.fetchData(), OkResponse<String>(testingPath));
       expect(await fileSource.fetchData(), isA<OkResponse<io.File>>());
@@ -136,7 +136,7 @@ void main() {
 
       expect(await testingFile.exists(), true);
 
-      await fileSource.writeFileAndUpdate(testingFile);
+      await fileSource.writeFileAndUpdate(testingFile.path);
 
       expect(await testingFile.exists(), true);
 

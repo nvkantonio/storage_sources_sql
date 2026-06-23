@@ -116,7 +116,7 @@ void main() {
       expect(await dbSource.fetchData(), isA<UndefResponse<String>>());
       expect(await fileSource.fetchData(), isA<UndefResponse<io.File>>());
 
-      await fileSource.writeFileAndUpdate(testingFile);
+      await fileSource.writeFileAndUpdate(testingFile.path);
       expect(await testingFile.exists(), true);
 
       expect(await dbSource.fetchData(), isA<OkResponse<String>>());

@@ -24,7 +24,7 @@ abstract class FileFromDatabasePathStorageSource<T>
   @override
   final PathValueSqliteStorageSource parent;
 
-  Future<int> writeFileAndUpdate(T file, List<int> bytes);
+  Future<int> writeFileAndUpdate(String filePath, List<int> bytes);
 
   @protected
   Future<SR<T>> fileResultFromPath(String path);

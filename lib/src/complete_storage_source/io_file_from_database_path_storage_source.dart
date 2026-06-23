@@ -14,10 +14,12 @@ class IoFileFromDatabasePathStorageSource
       {required super.key, required super.dbTableState});
 
   Future<int> writeFileAndUpdateDirect(
-    io.File file,
+    String filePath,
     Database db, [
     List<int>? bytes,
   ]) async {
+    final file = io.File(filePath);
+
     if (bytes != null) {
       await file.writeAsBytes(bytes);
     } else {
@@ -37,10 +39,10 @@ class IoFileFromDatabasePathStorageSource
   Future<void> deleteFile(io.File file) => file.delete();
 
   @override
-  Future<int> writeFileAndUpdate(io.File file, [List<int>? bytes]) async {
+  Future<int> writeFileAndUpdate(String filePath, [List<int>? bytes]) async {
     return dbTableState.runInTableLockAndIsolate(
-      callback: (db) => writeFileAndUpdateDirect(file, db, bytes),
-      equalityArg: '$runtimeType:update:${file.hashCode}',
+      callback: (db) => writeFileAndUpdateDirect(filePath, db, bytes),
+      equalityArg: '$runtimeType:update:ioFile:$filePath',
     );
   }
 
