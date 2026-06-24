@@ -18,7 +18,9 @@ void main() {
   }
 
   group('A group of IoFileFromDatabasePathStorageSource tests', () {
-    final testingPath = path_lib.join(path_lib.current, 'temp_file.txt');
+    final testingDirectoryPath = path_lib.join(path_lib.current, 'test_folder');
+
+    final testingPath = path_lib.join(testingDirectoryPath, 'temp_file.txt');
     final testingFile = io.File(testingPath);
 
     final dbState = DatabaseStateInMemory();
@@ -50,6 +52,16 @@ void main() {
         await testingFile.delete();
       }
     });
+
+    tearDownAll(
+      () async {
+        final testingDirectory = io.Directory(testingDirectoryPath);
+
+        if (await testingDirectory.exists()) {
+          await testingDirectory.delete();
+        }
+      },
+    );
 
     test(
         'Test IoFileFromDatabasePathStorageSource and PathValueSqliteStorageSource fetch, writeFileAndUpdate and delete and in data sync',

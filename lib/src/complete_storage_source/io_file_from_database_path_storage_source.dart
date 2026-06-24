@@ -20,10 +20,12 @@ class IoFileFromDatabasePathStorageSource
   ]) async {
     final file = io.File(filePath);
 
+    if (!await file.exists()) {
+      await file.create(recursive: true);
+    }
+
     if (bytes != null) {
       await file.writeAsBytes(bytes);
-    } else {
-      await file.create();
     }
 
     return await updateDirect(file, db);
