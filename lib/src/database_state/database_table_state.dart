@@ -61,11 +61,12 @@ abstract class DatabaseTableStateBase implements DatabaseTableStatePublic {
   @override
   Future<R> runInTableLockAndIsolate<R>({
     required FutureOr<R> Function(Database db) callback,
+    String? processKey,
     dynamic equalityArg = const NoArgument(),
   }) {
     return tableLocker.run<R>(
       () => dbState.runInIsolate<R>(callback),
-      processLink: tableName,
+      processLink: processKey != null ? '$tableName:$processKey' : tableName,
       equalityArg: equalityArg,
     );
   }

@@ -44,7 +44,8 @@ class IoFileFromDatabasePathStorageSource
   Future<int> writeFileAndUpdate(String filePath, [List<int>? bytes]) async {
     return dbTableState.runInTableLockAndIsolate(
       callback: (db) => writeFileAndUpdateDirect(filePath, db, bytes),
-      equalityArg: '$runtimeType:update:ioFile:$filePath',
+      processKey: key,
+      equalityArg: 'writeFile:$key:$filePath',
     );
   }
 
@@ -66,7 +67,8 @@ class IoFileFromDatabasePathStorageSource
   Future<int> update(io.File newData) {
     return dbTableState.runInTableLockAndIsolate(
       callback: (db) => updateDirect(newData, db),
-      equalityArg: '$key:update:${newData.path.hashCode}',
+      processKey: key,
+      equalityArg: 'update:$key:${newData.path}',
     );
   }
 }

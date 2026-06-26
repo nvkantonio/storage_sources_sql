@@ -77,7 +77,8 @@ abstract class FileFromDatabasePathStorageSource<T>
   Future<SR<T>> fetchData() {
     return dbTableState.runInTableLockAndIsolate(
       callback: fetchDataDirect,
-      equalityArg: '$key:fetch',
+      processKey: key,
+      equalityArg: 'fetch:$key',
     );
   }
 
@@ -85,7 +86,8 @@ abstract class FileFromDatabasePathStorageSource<T>
   Future<int> update(T newData) {
     return dbTableState.runInTableLockAndIsolate(
       callback: (db) => updateDirect(newData, db),
-      equalityArg: '$key:update:${newData.hashCode}',
+      processKey: key,
+      equalityArg: 'update:$key:${newData.hashCode}',
     );
   }
 
@@ -93,7 +95,8 @@ abstract class FileFromDatabasePathStorageSource<T>
   Future<int> delete() {
     return dbTableState.runInTableLockAndIsolate(
       callback: deleteDirect,
-      equalityArg: '$key:delete',
+      processKey: key,
+      equalityArg: 'delete:$key',
     );
   }
 }
