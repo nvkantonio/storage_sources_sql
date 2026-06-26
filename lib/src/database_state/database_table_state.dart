@@ -9,10 +9,8 @@ import '../utils/sql_master_queries.dart';
 import '../../storage_sources_sql_core.dart';
 import '../../misc.dart';
 
-final globalProcessLocker = CallbackCompletersProcesses();
-
 abstract interface class DatabaseTableStatePublic {
-  CallbackCompletersProcesses get tableLocker;
+  CallbackCompletersProcesses get tableProcessLocker;
 
   FutureOr<bool> get isTableExist;
   String get tableName;
@@ -44,14 +42,15 @@ abstract class DatabaseTableStateBase implements DatabaseTableStatePublic {
   FutureOr<bool> get isTableExist => checkIsTableExist();
 
   @override
-  CallbackCompletersProcesses get tableLocker => globalProcessLocker;
+  CallbackCompletersProcesses get tableProcessLocker =>
+      dbState.databaseProcessLocker;
 
   @override
   Future<R> runInTableLock<R>(
     Future<R> Function() callback, {
     dynamic equalityArg = const NoArgument(),
   }) async {
-    return tableLocker.run<R>(
+    return tableProcessLocker.run<R>(
       callback,
       processLink: tableName,
       equalityArg: equalityArg,
@@ -64,7 +63,7 @@ abstract class DatabaseTableStateBase implements DatabaseTableStatePublic {
     String? processKey,
     dynamic equalityArg = const NoArgument(),
   }) {
-    return tableLocker.run<R>(
+    return tableProcessLocker.run<R>(
       () => dbState.runInIsolate<R>(callback),
       processLink: processKey != null ? '$tableName:$processKey' : tableName,
       equalityArg: equalityArg,

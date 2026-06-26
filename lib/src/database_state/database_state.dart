@@ -1,14 +1,22 @@
 import 'dart:async';
 import 'package:sqflite_common/sqflite.dart';
+import 'package:storage_sources_core/callback_completer.dart';
 
 import '../../misc.dart';
 
 abstract class DatabaseState {
-  const DatabaseState();
+  DatabaseState() {
+    _databaseProcessLocker = CallbackCompletersProcesses();
+  }
 
   factory DatabaseState.create(
           FutureOr<Database> Function() openDatabaseImplementationCallback) =>
       DatabaseStateCallback(openDatabaseImplementationCallback);
+
+  late final CallbackCompletersProcesses _databaseProcessLocker;
+
+  CallbackCompletersProcesses get databaseProcessLocker =>
+      _databaseProcessLocker;
 
   FutureOr<Database> openDatabase();
 
