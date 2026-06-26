@@ -25,7 +25,7 @@ void main() {
     });
 
     tearDown(() async {
-      await dbState.forceCloseDatabase();
+      await dbState.closeDatabase();
     });
 
     test(

@@ -50,7 +50,7 @@ void main() {
 
     tearDown(() async {
       dbTableState.clearIsTableExistState();
-      await dbState.forceCloseDatabase();
+      await dbState.closeDatabase();
     });
 
     test('Test single SqliteStorageSource concurrent operations same key',

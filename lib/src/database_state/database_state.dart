@@ -1,77 +1,19 @@
 import 'dart:async';
-import 'package:meta/meta.dart';
 import 'package:sqflite_common/sqflite.dart';
-import 'package:storage_sources_sql/storage_sources_sql.dart';
 
 import '../../misc.dart';
 
 abstract class DatabaseState {
-  DatabaseState();
+  const DatabaseState();
 
-  factory DatabaseState.withPath(String dataBasePath) =>
-      DatabaseStateOpenWithPath(dataBasePath);
+  factory DatabaseState.create(
+          FutureOr<Database> Function() openDatabaseImplementationCallback) =>
+      DatabaseStateCallback(openDatabaseImplementationCallback);
 
-  factory DatabaseState.withCallback(
-    FutureOr<Database> Function() openDatabaseImplementationCallback,
-  ) =>
-      DatabaseStateOpenWithCallback(openDatabaseImplementationCallback);
-
-  Database? _databaseState;
-
-  DatabaseTableState createDatabaseTable({
-    required String createTableQuery,
-    required String tableName,
-  }) =>
-      DatabaseTableState(
-        dbState: this,
-        tableName: tableName,
-        createTableQuery: createTableQuery,
-      );
-
-  /// This getter does not close db connection automatically
-  FutureOr<Database> get database {
-    if (_databaseState?.isOpen == true) {
-      return _databaseState!;
-    } else {
-      return openDatabase();
-    }
-  }
-
-  @protected
-  FutureOr<Database> get openDatabaseImplementation;
-
-  Future<Database> openDatabase() async {
-    try {
-      if (_databaseState != null) {
-        if (_databaseState!.isOpen == true) {
-          return _databaseState!;
-        }
-
-        _databaseState = null;
-      }
-
-      return _databaseState = await openDatabaseImplementation;
-    } catch (e, st) {
-      await forceCloseDatabase();
-      throw CanNotOpenDatabase('Can not open database', e, st);
-    }
-  }
-
-  FutureOr<void> closeDatabase();
-
-  Future<void> forceCloseDatabase() async {
-    if (_databaseState?.isOpen == true) {
-      await _databaseState!.close();
-    }
-    _databaseState = null;
-  }
-
-  Future<R> runInMainDb<R>(FutureOr<R> Function(Database db) callback) async {
-    return await callback(await database);
-  }
+  FutureOr<Database> openDatabase();
 
   Future<R> runInIsolate<R>(FutureOr<R> Function(Database db) callback) async {
-    final db = await openDatabaseImplementation;
+    final db = await openDatabase();
 
     try {
       return await callback(db);
@@ -88,7 +30,7 @@ abstract class DatabaseState {
       return callback(database);
     }
 
-    final db = await openDatabaseImplementation;
+    final db = await openDatabase();
     try {
       return await callback(db);
     } catch (e) {
@@ -97,58 +39,66 @@ abstract class DatabaseState {
       await db.close();
     }
   }
+
+  /// Used if database should not be closed in isolates and openDatabase calls
+  FutureOr<void> closeDatabase() async {}
 }
 
-class DatabaseStateOpenWithCallback extends DatabaseState {
-  DatabaseStateOpenWithCallback(this.openDatabaseImplementationCallback);
+class DatabaseStateCallback extends DatabaseState {
+  DatabaseStateCallback(this.openDatabaseImplementationCallback);
 
   final FutureOr<Database> Function() openDatabaseImplementationCallback;
 
   @override
-  FutureOr<Database> get openDatabaseImplementation =>
-      openDatabaseImplementationCallback();
-
-  @override
-  Future<void> closeDatabase() => forceCloseDatabase();
-}
-
-class DatabaseStateOpenWithPath extends DatabaseState {
-  DatabaseStateOpenWithPath(this.dataBasePath);
-
-  final String dataBasePath;
-
-  @override
-  @protected
-  Future<Database> get openDatabaseImplementation =>
-      databaseFactory.openDatabase(dataBasePath);
-
-  @override
-  Future<void> closeDatabase() => forceCloseDatabase();
+  FutureOr<Database> openDatabase() => openDatabaseImplementationCallback();
 }
 
 /// Prevents closing database while stored in memory.
-/// Closes with [forceCloseDatabase] only
 class DatabaseStateInMemory extends DatabaseState {
   DatabaseStateInMemory();
 
   String get dataBasePath => inMemoryDatabasePath;
 
-  @override
-  @protected
-  Future<Database> get openDatabaseImplementation =>
-      databaseFactory.openDatabase(dataBasePath);
+  Database? _databaseState;
 
   @override
-  Future<void> closeDatabase() async {}
+  Future<Database> openDatabase() async {
+    try {
+      if (_databaseState != null) {
+        if (_databaseState!.isOpen == true) {
+          return _databaseState!;
+        }
+
+        _databaseState = null;
+      }
+
+      return _databaseState = await _openInMemoryDatabase();
+    } catch (e, st) {
+      await closeDatabase();
+      _databaseState = null;
+      throw CanNotOpenDatabase('Can not open database', e, st);
+    }
+  }
+
+  @override
+  Future<void> closeDatabase() async {
+    if (_databaseState?.isOpen == true) {
+      await _databaseState!.close();
+    }
+    _databaseState = null;
+  }
 
   @override
   Future<R> runInIsolate<R>(FutureOr<R> Function(Database db) callback) async =>
-      runInMainDb(callback);
+      await callback(await openDatabase());
 
   @override
   Future<R> runInIsolateOrDirectly<R>(
     FutureOr<R> Function(Database db) callback, [
     Database? database,
-  ]) =>
-      runInMainDb(callback);
+  ]) async =>
+      await callback(database ?? await openDatabase());
+
+  Future<Database> _openInMemoryDatabase() =>
+      databaseFactory.openDatabase(inMemoryDatabasePath);
 }

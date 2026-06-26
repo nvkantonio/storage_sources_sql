@@ -63,7 +63,7 @@ void main() {
         await testingFile.delete();
       }
 
-      await dbState.forceCloseDatabase();
+      await dbState.closeDatabase();
     });
 
     test(

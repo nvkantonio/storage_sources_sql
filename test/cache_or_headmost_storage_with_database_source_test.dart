@@ -48,7 +48,7 @@ void main() {
     });
 
     tearDown(() async {
-      await dbState.forceCloseDatabase();
+      await dbState.closeDatabase();
       dbTableState.clearIsTableExistState();
     });
 
@@ -130,7 +130,7 @@ void main() {
     });
 
     tearDown(() async {
-      await dbState.forceCloseDatabase();
+      await dbState.closeDatabase();
       dbSource.dbTableStatePublic.clearIsTableExistState();
     });
 
@@ -213,7 +213,7 @@ void main() {
     });
 
     tearDown(() async {
-      await dbState.forceCloseDatabase();
+      await dbState.closeDatabase();
       dbSource.dbTableStatePublic.clearIsTableExistState();
     });
 

@@ -46,7 +46,7 @@ void main() {
     tearDown(() async {
       dbTableState.clearIsTableExistState();
 
-      await dbState.forceCloseDatabase();
+      await dbState.closeDatabase();
 
       if (await testingFile.exists()) {
         await testingFile.delete();
