@@ -22,11 +22,8 @@ void main() {
     final dbState = DatabaseStateInMemory();
     final dbTableState = TextValueDatabaseTableState(dbState);
 
-    setUp(() async {
-      await dbState.openDatabase();
-    });
-
     tearDown(() async {
+      dbTableState.clearIsTableExistState();
       await dbState.closeDatabase();
     });
 

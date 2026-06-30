@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:meta/meta.dart';
 import 'package:sqflite_common/sqflite.dart';
 import 'package:storage_sources_core/callback_completer.dart';
 
@@ -8,6 +9,9 @@ class DatabaseCallbackCompletersProcesses extends CallbackCompletersProcesses {
   FutureOr<Database>? _database;
 
   final FutureOr<Database> Function() openDatabaseImplementationCallback;
+
+  @visibleForTesting
+  FutureOr<Database>? get database => _database;
 
   Future<R> runWithDb<R extends dynamic>(
     FutureOr<R> Function(Database db) callback, {

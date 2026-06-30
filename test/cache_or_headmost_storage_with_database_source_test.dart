@@ -213,8 +213,8 @@ void main() {
     });
 
     tearDown(() async {
-      await dbState.closeDatabase();
       dbSource.dbTableStatePublic.clearIsTableExistState();
+      await dbState.closeDatabase();
     });
 
     /// Update dbSource value which will throw

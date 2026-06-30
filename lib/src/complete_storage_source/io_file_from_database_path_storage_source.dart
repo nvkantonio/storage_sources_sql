@@ -41,11 +41,20 @@ class IoFileFromDatabasePathStorageSource
   Future<void> deleteFile(io.File file) => file.delete();
 
   @override
-  Future<int> writeFileAndUpdate(String filePath, [List<int>? bytes]) async {
-    return dbTableState.runInTableLockAndIsolate(
-      callback: (db) => writeFileAndUpdateDirect(filePath, db, bytes),
+  Future<int> writeFileAndUpdate(
+    String filePath,
+    List<int>? bytes, {
+    Database? directDb,
+  }) async {
+    if (dbState is DatabaseStatePersistentInstance) {
+      directDb ??= await dbState.openDatabase();
+    }
+
+    return dbTableState.runInTableMultiProcess(
+      (db) => writeFileAndUpdateDirect(filePath, db, bytes),
       processKey: key,
       equalityArg: 'writeFile:$key:$filePath',
+      directDb: directDb,
     );
   }
 
@@ -64,11 +73,16 @@ class IoFileFromDatabasePathStorageSource
   }
 
   @override
-  Future<int> update(io.File newData) {
-    return dbTableState.runInTableLockAndIsolate(
-      callback: (db) => updateDirect(newData, db),
+  Future<int> update(io.File newData, {Database? directDb}) async {
+    if (dbState is DatabaseStatePersistentInstance) {
+      directDb ??= await dbState.openDatabase();
+    }
+
+    return dbTableState.runInTableMultiProcess(
+      (db) => updateDirect(newData, db),
       processKey: key,
       equalityArg: 'update:$key:${newData.path}',
+      directDb: directDb,
     );
   }
 }

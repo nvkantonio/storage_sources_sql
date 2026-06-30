@@ -17,10 +17,8 @@ class TestException implements Exception {
   final dynamic stacktrace;
 }
 
-Future<dynamic> runTestFutureException(Function() callback) =>
-    Future<dynamic>(callback).catchError(
-      TestException.new,
-    );
+Future<dynamic> testException(Future<dynamic> Function() callback) =>
+    Future<dynamic>(callback).catchError(TestException.new);
 
 final isNotTextException = isNot(isA<TestException>());
 
@@ -57,30 +55,34 @@ void main() {
         () async {
       const testValue = 'yes-yes-yes';
 
-      final fetchResult1 = runTestFutureException(source1.fetchData);
-      final fetchResult2 = runTestFutureException(source1.fetchData);
+      final fetchResult1 = Future(() => testException(source1.fetchData));
+      final fetchResult2 = Future(() => testException(source1.fetchData));
 
       expect(await fetchResult1, isNotTextException);
+
       expect(await fetchResult2, isNotTextException);
-      expect(
-          await runTestFutureException(source1.fetchData), isNotTextException);
-
-      final updateResult1 =
-          runTestFutureException(() => source1.update(testValue));
-      final updateResult2 =
-          runTestFutureException(() => source1.update(testValue));
-
-      expect(await updateResult1, isNotTextException);
-      expect(await updateResult2, isNotTextException);
-      expect(await runTestFutureException(() => source1.update(testValue)),
+      expect(await Future(() => testException(source1.fetchData)),
           isNotTextException);
 
-      final deleteResult1 = runTestFutureException(() => source1.delete());
-      final deleteResult2 = runTestFutureException(() => source1.delete());
+      final updateResult1 =
+          Future(() => testException(() => source1.update(testValue)));
+      final updateResult2 =
+          Future(() => testException(() => source1.update(testValue)));
+
+      await Future.delayed(Duration(microseconds: 1));
+
+      expect(await updateResult1, isNotTextException);
+
+      expect(await updateResult2, isNotTextException);
+      expect(await Future(() => testException(() => source1.update(testValue))),
+          isNotTextException);
+
+      final deleteResult1 = Future(() => testException(() => source1.delete()));
+      final deleteResult2 = Future(() => testException(() => source1.delete()));
 
       expect(await deleteResult1, isNotTextException);
       expect(await deleteResult2, isNotTextException);
-      expect(await runTestFutureException(() => source1.delete()),
+      expect(await Future(() => testException(() => source1.delete())),
           isNotTextException);
     });
 
@@ -88,30 +90,33 @@ void main() {
         () async {
       const testValue = 'yes-yes-yes';
 
-      final fetchResult1 = runTestFutureException(source1.fetchData);
-      final fetchResult2 = runTestFutureException(source2.fetchData);
+      final fetchResult1 = Future(() => testException(source1.fetchData));
+      final fetchResult2 = Future(() => testException(source2.fetchData));
+
+      await Future.delayed(Duration(milliseconds: 1));
 
       expect(await fetchResult1, isNotTextException);
+
       expect(await fetchResult2, isNotTextException);
-      expect(
-          await runTestFutureException(source1.fetchData), isNotTextException);
+      expect(await Future(() => testException(source1.fetchData)),
+          isNotTextException);
 
       final updateResult1 =
-          runTestFutureException(() => source1.update(testValue));
+          Future(() => testException(() => source1.update(testValue)));
       final updateResult2 =
-          runTestFutureException(() => source2.update(testValue));
+          Future(() => testException(() => source2.update(testValue)));
 
       expect(await updateResult1, isNotTextException);
       expect(await updateResult2, isNotTextException);
-      expect(await runTestFutureException(() => source1.update(testValue)),
+      expect(await Future(() => testException(() => source1.update(testValue))),
           isNotTextException);
 
-      final deleteResult1 = runTestFutureException(() => source1.delete());
-      final deleteResult2 = runTestFutureException(() => source2.delete());
+      final deleteResult1 = Future(() => testException(() => source1.delete()));
+      final deleteResult2 = Future(() => testException(() => source2.delete()));
 
       expect(await deleteResult1, isNotTextException);
       expect(await deleteResult2, isNotTextException);
-      expect(await runTestFutureException(() => source1.delete()),
+      expect(await Future(() => testException(() => source1.delete())),
           isNotTextException);
     });
 
@@ -119,30 +124,30 @@ void main() {
         'Test multiple SqliteStorageSource concurrent operations different key',
         () async {
       const testValue = 'yes-yes-yes';
-      final fetchResult1 = runTestFutureException(source1.fetchData);
-      final fetchResult2 = runTestFutureException(source2.fetchData);
+      final fetchResult1 = Future(() => testException(source1.fetchData));
+      final fetchResult2 = Future(() => testException(source2.fetchData));
 
       expect(await fetchResult1, isNotTextException);
       expect(await fetchResult2, isNotTextException);
-      expect(
-          await runTestFutureException(source1.fetchData), isNotTextException);
+      expect(await Future(() => testException(source1.fetchData)),
+          isNotTextException);
 
       final updateResult1 =
-          runTestFutureException(() => source1.update(testValue));
+          Future(() => testException(() => source1.update(testValue)));
       final updateResult2 =
-          runTestFutureException(() => source2.update(testValue));
+          Future(() => testException(() => source2.update(testValue)));
 
       expect(await updateResult1, isNotTextException);
       expect(await updateResult2, isNotTextException);
-      expect(await runTestFutureException(() => source1.update(testValue)),
+      expect(await Future(() => testException(() => source1.update(testValue))),
           isNotTextException);
 
-      final deleteResult1 = runTestFutureException(() => source1.delete());
-      final deleteResult2 = runTestFutureException(() => source2.delete());
+      final deleteResult1 = Future(() => testException(() => source1.delete()));
+      final deleteResult2 = Future(() => testException(() => source2.delete()));
 
       expect(await deleteResult1, isNotTextException);
       expect(await deleteResult2, isNotTextException);
-      expect(await runTestFutureException(() => source1.delete()),
+      expect(await Future(() => testException(() => source1.delete())),
           isNotTextException);
     });
   });

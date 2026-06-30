@@ -104,29 +104,44 @@ abstract class RegularSingleTableSqliteStorageSource<T>
   }
 
   @override
-  Future<SR<T>> fetchData() {
-    return dbTableState.runInTableLockAndIsolate(
-      callback: fetchDataDirect,
+  Future<SR<T>> fetchData({Database? directDb}) async {
+    if (dbState is DatabaseStatePersistentInstance) {
+      directDb ??= await dbState.openDatabase();
+    }
+
+    return dbTableState.runInTableMultiProcess(
+      fetchDataDirect,
       processKey: key,
       equalityArg: 'fetch:$key',
+      directDb: directDb,
     );
   }
 
   @override
-  Future<int> update(T newData) {
-    return dbTableState.runInTableLockAndIsolate(
-      callback: (db) => updateDirect(newData, db),
+  Future<int> update(T newData, {Database? directDb}) async {
+    if (dbState is DatabaseStatePersistentInstance) {
+      directDb ??= await dbState.openDatabase();
+    }
+
+    return dbTableState.runInTableMultiProcess(
+      (db) => updateDirect(newData, db),
       processKey: key,
       equalityArg: 'update:$key:${newData.hashCode}',
+      directDb: directDb,
     );
   }
 
   @override
-  Future<int> delete() {
-    return dbTableState.runInTableLockAndIsolate(
-      callback: deleteDirect,
+  Future<int> delete({Database? directDb}) async {
+    if (dbState is DatabaseStatePersistentInstance) {
+      directDb ??= await dbState.openDatabase();
+    }
+
+    return dbTableState.runInTableMultiProcess(
+      deleteDirect,
       processKey: key,
       equalityArg: 'delete:$key',
+      directDb: directDb,
     );
   }
 

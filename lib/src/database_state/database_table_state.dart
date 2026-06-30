@@ -10,21 +10,18 @@ import '../../storage_sources_sql_core.dart';
 import '../../misc.dart';
 
 abstract interface class DatabaseTableStatePublic {
-  CallbackCompletersProcesses get tableProcessLocker;
+  DatabaseCallbackCompletersProcesses get tableProcessLocker;
 
   FutureOr<bool> get isTableExist;
   String get tableName;
 
   FutureOr<bool> checkIsTableExist();
 
-  Future<R> runInTableLock<R>(
-    Future<R> Function() callback, {
-    String? equalityArg,
-  });
-
-  Future<R> runInTableLockAndIsolate<R>({
-    required FutureOr<R> Function(Database db) callback,
+  Future<R> runInTableMultiProcess<R>(
+    FutureOr<R> Function(Database db) callback, {
+    String? processKey,
     dynamic equalityArg = const NoArgument(),
+    Database directDb,
   });
 
   void clearIsTableExistState();
@@ -42,30 +39,30 @@ abstract class DatabaseTableStateBase implements DatabaseTableStatePublic {
   FutureOr<bool> get isTableExist => checkIsTableExist();
 
   @override
-  CallbackCompletersProcesses get tableProcessLocker =>
+  DatabaseCallbackCompletersProcesses get tableProcessLocker =>
       dbState.databaseProcessLocker;
 
   @override
-  Future<R> runInTableLock<R>(
-    Future<R> Function() callback, {
-    dynamic equalityArg = const NoArgument(),
-  }) async {
-    return tableProcessLocker.run<R>(
-      callback,
-      processLink: tableName,
-      equalityArg: equalityArg,
-    );
-  }
-
-  @override
-  Future<R> runInTableLockAndIsolate<R>({
-    required FutureOr<R> Function(Database db) callback,
+  Future<R> runInTableMultiProcess<R>(
+    FutureOr<R> Function(Database db) callback, {
     String? processKey,
     dynamic equalityArg = const NoArgument(),
+    Database? directDb,
   }) {
-    return tableProcessLocker.run<R>(
-      () => dbState.runInIsolate<R>(callback),
-      processLink: processKey != null ? '$tableName:$processKey' : tableName,
+    final processLink =
+        processKey != null ? '$tableName:$processKey' : tableName;
+
+    if (directDb != null) {
+      return tableProcessLocker.run<R>(
+        () => callback(directDb),
+        processLink: processLink,
+        equalityArg: equalityArg,
+      );
+    }
+
+    return dbState.runInMultiProcessIsolate<R>(
+      callback,
+      processLink: processLink,
       equalityArg: equalityArg,
     );
   }

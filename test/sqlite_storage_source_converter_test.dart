@@ -25,6 +25,7 @@ void main() {
     });
 
     tearDown(() async {
+      dbTableState.clearIsTableExistState();
       await dbState.closeDatabase();
     });
 

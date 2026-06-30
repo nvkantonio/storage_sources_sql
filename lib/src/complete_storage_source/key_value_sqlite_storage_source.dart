@@ -2,7 +2,10 @@ import '../../storage_sources_sql.dart';
 
 class KeyValueSqliteStorageSource
     extends RegularSingleTableSqliteStorageSource<String> {
-  KeyValueSqliteStorageSource({required this.key, required this.dbTableState});
+  KeyValueSqliteStorageSource({
+    required this.key,
+    required this.dbTableState,
+  });
 
   @override
   final String key;

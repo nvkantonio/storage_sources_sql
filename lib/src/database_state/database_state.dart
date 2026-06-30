@@ -1,21 +1,23 @@
 import 'dart:async';
-import 'package:sqflite_common/sqflite.dart';
+import 'package:meta/meta.dart';
+import 'package:sqflite_common/sqflite.dart' as sqflite;
+import 'package:sqflite_common/sqflite.dart' show Database;
 import 'package:storage_sources_core/callback_completer.dart';
 
 import '../../misc.dart';
 
 abstract class DatabaseState {
   DatabaseState() {
-    _databaseProcessLocker = CallbackCompletersProcesses();
+    _databaseProcessLocker = DatabaseCallbackCompletersProcesses(openDatabase);
   }
 
   factory DatabaseState.create(
           FutureOr<Database> Function() openDatabaseImplementationCallback) =>
       DatabaseStateCallback(openDatabaseImplementationCallback);
 
-  late final CallbackCompletersProcesses _databaseProcessLocker;
+  late final DatabaseCallbackCompletersProcesses _databaseProcessLocker;
 
-  CallbackCompletersProcesses get databaseProcessLocker =>
+  DatabaseCallbackCompletersProcesses get databaseProcessLocker =>
       _databaseProcessLocker;
 
   FutureOr<Database> openDatabase();
@@ -28,6 +30,18 @@ abstract class DatabaseState {
     } finally {
       await db.close();
     }
+  }
+
+  Future<R> runInMultiProcessIsolate<R>(
+    FutureOr<R> Function(Database db) callback, {
+    required Object processLink,
+    dynamic equalityArg = const NoArgument(),
+  }) async {
+    return databaseProcessLocker.runWithDb<R>(
+      callback,
+      processLink: processLink,
+      equalityArg: equalityArg,
+    );
   }
 
   Future<R> runInIsolateOrDirectly<R>(
@@ -62,12 +76,13 @@ class DatabaseStateCallback extends DatabaseState {
 }
 
 /// Prevents closing database while stored in memory.
-class DatabaseStateInMemory extends DatabaseState {
-  DatabaseStateInMemory();
-
-  String get dataBasePath => inMemoryDatabasePath;
-
+abstract class DatabaseStatePersistentInstance extends DatabaseState {
   Database? _databaseState;
+
+  @protected
+  Future<Database> openDatabaseImplementation() =>
+      sqflite.databaseFactory.openDatabase(sqflite.inMemoryDatabasePath,
+          options: sqflite.OpenDatabaseOptions(singleInstance: true));
 
   @override
   Future<Database> openDatabase() async {
@@ -80,7 +95,7 @@ class DatabaseStateInMemory extends DatabaseState {
         _databaseState = null;
       }
 
-      return _databaseState = await _openInMemoryDatabase();
+      return _databaseState = await openDatabaseImplementation();
     } catch (e, st) {
       await closeDatabase();
       _databaseState = null;
@@ -106,7 +121,15 @@ class DatabaseStateInMemory extends DatabaseState {
     Database? database,
   ]) async =>
       await callback(database ?? await openDatabase());
+}
 
-  Future<Database> _openInMemoryDatabase() =>
-      databaseFactory.openDatabase(inMemoryDatabasePath);
+class DatabaseStateInMemory extends DatabaseStatePersistentInstance {
+  DatabaseStateInMemory();
+
+  String get dataBasePath => sqflite.inMemoryDatabasePath;
+
+  @override
+  Future<Database> openDatabaseImplementation() =>
+      sqflite.databaseFactory.openDatabase(sqflite.inMemoryDatabasePath,
+          options: sqflite.OpenDatabaseOptions(singleInstance: true));
 }
